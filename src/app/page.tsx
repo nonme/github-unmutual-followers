@@ -88,8 +88,7 @@ export default function Home() {
           if (response.status === 403) {
             const errorData = await response.json();
             if (
-              errorData.message &&
-              errorData.message.includes("API rate limit exceeded")
+              errorData.message?.includes("API rate limit exceeded")
             ) {
               throw new Error(
                 "API rate limit exceeded. Please use a personal access token for higher limits."
@@ -204,7 +203,7 @@ export default function Home() {
             </CardTitle>
           </div>
           <CardDescription>
-            Find who doesn't follow you back on GitHub
+            Find who doesn&apos;t follow you back on GitHub
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -273,10 +272,10 @@ export default function Home() {
                           <ExternalLink className="h-3 w-3 ml-1" />
                         </a>
                       </li>
-                      <li>Click "Generate new token"</li>
+                      <li>Click &quot;Generate new token&quot;</li>
                       <li>
-                        Under "Account permissions" set "Followers: access" to
-                        "read-only"
+                        Under &quot;Account permissions&quot; set
+                        &quot;Followers: access&quot; to &quot;read-only&quot;
                       </li>
                     </ol>
                   </div>
@@ -306,7 +305,7 @@ export default function Home() {
           )}
 
           {partialResult && (
-            <Alert className="mt-4" variant="warning">
+            <Alert className="mt-4" variant="default">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
                 Only partial results are shown due to rate limiting or errors.
@@ -386,9 +385,7 @@ export default function Home() {
         </CardContent>
       </Card>
       <footer className="mt-6 text-center text-sm text-gray-500">
-        <p>
-          This is not an official GitHub website.
-        </p>
+        <p>This is not an official GitHub website.</p>
         <p>
           Found a bug?{" "}
           <a
