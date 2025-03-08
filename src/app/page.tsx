@@ -194,7 +194,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center space-x-2">
@@ -385,6 +385,23 @@ export default function Home() {
           )}
         </CardContent>
       </Card>
+      <footer className="mt-6 text-center text-sm text-gray-500">
+        <p>
+          This is not an official GitHub website.
+        </p>
+        <p>
+          Found a bug?{" "}
+          <a
+            href="https://github.com/nonme/github-unmutual-followers/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline inline-flex items-center"
+          >
+            Report it on GitHub Issues
+            <ExternalLink className="h-3 w-3 ml-1" />
+          </a>
+        </p>
+      </footer>
     </div>
   );
 }
