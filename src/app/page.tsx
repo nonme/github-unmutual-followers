@@ -50,13 +50,14 @@ export default function Home() {
     followers: number;
     following: number;
   } | null>(null);
+  const [rateLimitIp, setRateLimitIp] = useState<string | null>(null); // State for IP from rate limit error
 
-  // Function to check if Link header contains a next page
+  // Check if Link header contains a next page
   const hasNextPage = (linkHeader: string | null): boolean => {
     return linkHeader ? linkHeader.includes('rel="next"') : false;
   };
 
-  // Function to fetch all pages of users with proper pagination
+  // Fetch all pages of users with proper pagination
   const fetchAllUsers = async (
     type: "followers" | "following"
   ): Promise<FetchResult<GitHubUser[]>> => {
@@ -87,11 +88,16 @@ export default function Home() {
         if (!response.ok) {
           if (response.status === 403) {
             const errorData = await response.json();
-            if (
-              errorData.message?.includes("API rate limit exceeded")
-            ) {
+            if (errorData.message?.includes("API rate limit exceeded")) {
+              // Extract IP from error message
+              const ipMatch = errorData.message.match(
+                /for (\d+\.\d+\.\d+\.\d+)/
+              );
+              const ip = ipMatch ? ipMatch[1] : null;
               throw new Error(
-                "API rate limit exceeded. Please use a personal access token for higher limits."
+                `API rate limit exceeded${
+                  ip ? ` for IP ${ip}` : ""
+                }. Please use a personal access token for higher limits.`
               );
             }
           }
@@ -135,6 +141,7 @@ export default function Home() {
     setRequestComplete(false);
     setPartialResult(false);
     setStats(null);
+    setRateLimitIp(null); // Reset IP
 
     try {
       setProgress(10);
@@ -149,14 +156,30 @@ export default function Home() {
       setProgress(90);
       setProgressText("Processing results...");
 
-      // Check if either request encountered an error
+      // Handle case where both requests fail
+      if (!followersResult.isComplete && !followingResult.isComplete) {
+        throw new Error(
+          followersResult.error ||
+            followingResult.error ||
+            "Failed to fetch data due to rate limits or errors."
+        );
+      }
+
+      // Handle partial results
       if (!followersResult.isComplete || !followingResult.isComplete) {
         setPartialResult(true);
-
         if (followersResult.error) {
           setError(followersResult.error);
+          const ipMatch = followersResult.error.match(
+            /for IP (\d+\.\d+\.\d+\.\d+)/
+          );
+          if (ipMatch) setRateLimitIp(ipMatch[1]);
         } else if (followingResult.error) {
           setError(followingResult.error);
+          const ipMatch = followingResult.error.match(
+            /for IP (\d+\.\d+\.\d+\.\d+)/
+          );
+          if (ipMatch) setRateLimitIp(ipMatch[1]);
         }
       }
 
@@ -187,6 +210,10 @@ export default function Home() {
       setError(
         err instanceof Error ? err.message : "An unexpected error occurred"
       );
+      const ipMatch =
+        err instanceof Error &&
+        err.message.match(/for IP (\d+\.\d+\.\d+\.\d+)/);
+      if (ipMatch) setRateLimitIp(ipMatch[1]);
     } finally {
       setLoading(false);
     }
@@ -319,14 +346,15 @@ export default function Home() {
               <p>{error}</p>
               {error.includes("API rate limit exceeded") && (
                 <p className="text-sm mt-2">
-                  GitHub limits the number of anonymous API requests. Consider
-                  using a personal access token for higher limits.
+                  GitHub limits the number of anonymous API requests
+                  {rateLimitIp ? ` from your IP (${rateLimitIp})` : ""}.
+                  Consider using a personal access token for higher limits.
                 </p>
               )}
             </div>
           )}
 
-          {requestComplete && stats && (
+          {requestComplete && stats && !error && (
             <div className="mt-6 space-y-4">
               <div className="bg-gray-50 p-3 rounded-md shadow-sm">
                 <h3 className="text-sm font-medium text-gray-700 mb-2">
